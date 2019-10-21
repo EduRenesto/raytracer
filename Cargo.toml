@@ -1,0 +1,13 @@
+[package]
+name = "raytracer"
+version = "0.1.0"
+authors = ["Edu Renesto <edure95@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+vek = "0.9.9"
+image = "0.21.1"
+glutin = "0.22.0-alpha3"
+gl = "0.13.0"
+clap = { version = "2.33.0", features = ["yaml"] }
+rand = "0.3"

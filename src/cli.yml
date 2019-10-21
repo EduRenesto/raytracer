@@ -1,0 +1,35 @@
+name: raytracer
+version: "0.1"
+author: Edu Renesto
+about: A simple experimental raytracer
+args:
+    - width:
+        short: w
+        long: width
+        value_name: WIDTH
+        help: The width of the rendered image
+        takes_value: true
+    - height:
+        short: h
+        long: height
+        value_name: HEIGHT
+        help: The height of the rendered image
+        takes_value: true
+    - scene:
+        short: s
+        long: scene
+        value_name: SCENE
+        help: The scene description file
+        takes_value: true
+    - samples:
+        short: x
+        long: samples
+        value_name: SAMPLES
+        help: The number of samples
+        takes_value: true
+    - threads:
+        short: n
+        long: threads
+        value_name: THREADS
+        help: The number of threads to use
+        takes_value: true
