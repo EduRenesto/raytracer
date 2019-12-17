@@ -12,7 +12,7 @@ pub struct PerspCamera {
     pub vertical: Vec3<f32>,
     pub origin: Vec3<f32>,
     width: u32,
-    height: u32
+    height: u32,
 }
 
 impl PerspCamera {
@@ -23,7 +23,7 @@ impl PerspCamera {
         aspect: f32,
         roll: f32,
         width: u32,
-        height: u32
+        height: u32,
     ) -> PerspCamera {
         let rotated_up = Vec3::new(-roll.sin(), roll.cos(), 0.0);
 
@@ -44,18 +44,20 @@ impl PerspCamera {
             horizontal,
             vertical,
             width,
-            height
+            height,
         }
     }
 }
 
 impl Camera for PerspCamera {
     fn generate_ray(&self, screen_coord: Vec2<usize>) -> Ray {
-        let screen_coord = Vec2::new(screen_coord.x as f32 / self.width as f32, screen_coord.y as f32 / self.height as f32);
-        let direction = self.corner
-            + (self.horizontal * screen_coord.x)
-            + (self.vertical * screen_coord.y)
-            - self.origin;
+        let screen_coord = Vec2::new(
+            screen_coord.x as f32 / self.width as f32,
+            screen_coord.y as f32 / self.height as f32,
+        );
+        let direction =
+            self.corner + (self.horizontal * screen_coord.x) + (self.vertical * screen_coord.y)
+                - self.origin;
 
         Ray {
             origin: self.origin,

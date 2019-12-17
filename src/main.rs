@@ -37,7 +37,7 @@ fn main() {
         (w as f32) / (h as f32),
         (0f32).to_radians(),
         w as u32,
-        h as u32
+        h as u32,
     );
 
     let ctx = RenderContext {
@@ -46,23 +46,31 @@ fn main() {
         samples: samples,
         n_threads: n_threads,
         objects: Arc::new(vec![
-            Shape::Sphere(Material::Lambertian(Rgb::new(0.0, 0.0, 0.6)), Vec3::new(-2.0, 1.0, 1.0), 0.5),
-            Shape::Sphere(Material::Lambertian(Rgb::new(0.0, 0.5, 0.0)), Vec3::new(-2.5, 1.0, 3.5), 0.5),
+            Shape::Sphere(
+                Material::Lambertian(Rgb::new(0.0, 0.0, 0.6)),
+                Vec3::new(-2.0, 1.0, 1.0),
+                0.5,
+            ),
+            Shape::Sphere(
+                Material::Lambertian(Rgb::new(0.0, 0.5, 0.0)),
+                Vec3::new(-2.5, 1.0, 3.5),
+                0.5,
+            ),
             Shape::Plane(
                 Material::Lambertian(Rgb::new(0.3, 0.0, 0.0)),
                 Vec3::new(0.0, 0.0, 0.0),
                 Vec3::new(0.0, 1.0, 0.0),
             ),
             //Shape::Plane(
-                ////Material::Glossy,
-                //Material::Lambertian(Rgb::new(0.6, 0.0, 0.0)),
-                //Vec3::new(-1.0, 0.0, 0.0),
-                //Vec3::new(1.0, 0.0, 0.0).normalized(),
+            ////Material::Glossy,
+            //Material::Lambertian(Rgb::new(0.6, 0.0, 0.0)),
+            //Vec3::new(-1.0, 0.0, 0.0),
+            //Vec3::new(1.0, 0.0, 0.0).normalized(),
             //),
             //Shape::Plane(
-                //Material::Glossy,
-                //Vec3::new(1.0, 0.0, 0.0),
-                //Vec3::new(-1.0, 0.0, 0.0).normalized(),
+            //Material::Glossy,
+            //Vec3::new(1.0, 0.0, 0.0),
+            //Vec3::new(-1.0, 0.0, 0.0).normalized(),
             //),
         ]),
         camera,
