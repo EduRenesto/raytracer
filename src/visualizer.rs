@@ -1,7 +1,7 @@
-use vek::vec::repr_c::{vec3::Vec3, vec2::Vec2, rgb::Rgb};
+use vek::vec::repr_c::{rgb::Rgb, vec2::Vec2, vec3::Vec3};
 
-use super::gl_texture::GlTexture;
 use super::gl_shader::GlShader;
+use super::gl_texture::GlTexture;
 
 type Receiver = std::sync::mpsc::Receiver<(Vec2<usize>, Rgb<f32>)>;
 
@@ -10,7 +10,7 @@ pub struct Visualizer {
     receiver: Receiver,
     w: usize,
     h: usize,
-    event_loop: glutin::event_loop::EventLoop<()>
+    event_loop: glutin::event_loop::EventLoop<()>,
 }
 
 impl Visualizer {
@@ -27,7 +27,7 @@ impl Visualizer {
 
         let ctx = unsafe { ctx.make_current().unwrap() };
 
-        gl::load_with(|s| ctx.get_proc_address(s) as *const std::ffi::c_void );
+        gl::load_with(|s| ctx.get_proc_address(s) as *const std::ffi::c_void);
 
         let mut vao = 0 as gl::types::GLuint;
 
@@ -36,12 +36,12 @@ impl Visualizer {
             let mut uvs_vbo = 0 as gl::types::GLuint;
 
             let positions = vec![
-                Vec3::new(1.0f32, 1.0f32, 0.0f32),  // top right
-                Vec3::new(-1.0f32, 1.0f32, 0.0f32), // top left
+                Vec3::new(1.0f32, 1.0f32, 0.0f32),   // top right
+                Vec3::new(-1.0f32, 1.0f32, 0.0f32),  // top left
                 Vec3::new(-1.0f32, -1.0f32, 0.0f32), // bottom left
                 Vec3::new(-1.0f32, -1.0f32, 0.0f32), // bottom left
-                Vec3::new(1.0f32, -1.0f32, 0.0f32), // bottom right
-                Vec3::new(1.0f32, 1.0f32, 0.0f32)  // top right
+                Vec3::new(1.0f32, -1.0f32, 0.0f32),  // bottom right
+                Vec3::new(1.0f32, 1.0f32, 0.0f32),   // top right
             ];
 
             let uvs = vec![
@@ -50,7 +50,7 @@ impl Visualizer {
                 Vec2::new(1.0f32, 1.0f32),
                 Vec2::new(1.0f32, 1.0f32),
                 Vec2::new(0.0f32, 1.0f32),
-                Vec2::new(0.0f32, 0.0f32)
+                Vec2::new(0.0f32, 0.0f32),
             ];
 
             unsafe {
@@ -61,18 +61,22 @@ impl Visualizer {
                 gl::GenBuffers(1, &mut uvs_vbo);
 
                 gl::BindBuffer(gl::ARRAY_BUFFER, pos_vbo);
-                gl::BufferData(gl::ARRAY_BUFFER, 
-                               12 * positions.len() as isize, 
-                               positions.as_ptr() as *const gl::types::GLvoid, 
-                               gl::STATIC_DRAW);
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    12 * positions.len() as isize,
+                    positions.as_ptr() as *const gl::types::GLvoid,
+                    gl::STATIC_DRAW,
+                );
                 gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::TRUE, 0, std::ptr::null());
                 gl::EnableVertexAttribArray(0);
 
                 gl::BindBuffer(gl::ARRAY_BUFFER, uvs_vbo);
-                gl::BufferData(gl::ARRAY_BUFFER, 
-                               8 * uvs.len() as isize, 
-                               uvs.as_ptr() as *const gl::types::GLvoid, 
-                               gl::STATIC_DRAW);
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    8 * uvs.len() as isize,
+                    uvs.as_ptr() as *const gl::types::GLvoid,
+                    gl::STATIC_DRAW,
+                );
                 gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::TRUE, 0, std::ptr::null());
                 gl::EnableVertexAttribArray(1);
             }
@@ -82,26 +86,25 @@ impl Visualizer {
 
         let shader = GlShader::new(vec![
             Box::new((gl::VERTEX_SHADER, "res/show_texture.vs.glsl".to_string())),
-            Box::new((gl::FRAGMENT_SHADER, "res/show_texture.fs.glsl".to_string()))
-        ]).unwrap();
+            Box::new((gl::FRAGMENT_SHADER, "res/show_texture.fs.glsl".to_string())),
+        ])
+        .unwrap();
 
         event_loop.run(move |evt, _, control_flow| {
             *control_flow = glutin::event_loop::ControlFlow::Poll;
 
             match evt {
-                glutin::event::Event::WindowEvent { event, .. } => {
-                    match event {
-                        glutin::event::WindowEvent::CloseRequested => {
-                            *control_flow = glutin::event_loop::ControlFlow::Exit
-                        },
-                        glutin::event::WindowEvent::RedrawRequested => {
-                            Visualizer::show_image(vao, &tex, &shader, &mut receiver);
-                            ctx.swap_buffers().unwrap();
-                        }
-                        _ => *control_flow = { glutin::event_loop::ControlFlow::Poll }
+                glutin::event::Event::WindowEvent { event, .. } => match event {
+                    glutin::event::WindowEvent::CloseRequested => {
+                        *control_flow = glutin::event_loop::ControlFlow::Exit
                     }
-                }, 
-                _ => { 
+                    glutin::event::WindowEvent::RedrawRequested => {
+                        Visualizer::show_image(vao, &tex, &shader, &mut receiver);
+                        ctx.swap_buffers().unwrap();
+                    }
+                    _ => *control_flow = { glutin::event_loop::ControlFlow::Poll },
+                },
+                _ => {
                     Visualizer::show_image(vao, &tex, &shader, &mut receiver);
                     ctx.swap_buffers().unwrap();
                     *control_flow = glutin::event_loop::ControlFlow::Poll;
@@ -113,12 +116,17 @@ impl Visualizer {
             receiver,
             w,
             h,
-            event_loop
+            event_loop,
         }
     }
 
-    fn show_image(vao: gl::types::GLuint, tex: &GlTexture, shader: &GlShader, receiver: &mut Receiver) {
-        unsafe { 
+    fn show_image(
+        vao: gl::types::GLuint,
+        tex: &GlTexture,
+        shader: &GlShader,
+        receiver: &mut Receiver,
+    ) {
+        unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 

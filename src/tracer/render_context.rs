@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use super::shape::Shape;
 use super::camera::Camera;
+use super::shape::Shape;
 
 /// Stores all the information needed to perform
 /// the rendering.
@@ -13,5 +13,5 @@ pub struct RenderContext<C: Camera> {
 
     pub objects: Arc<Vec<Shape>>,
 
-    pub camera: C
+    pub camera: C,
 }

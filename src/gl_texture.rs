@@ -3,7 +3,7 @@ type Rgb = vek::vec::repr_c::Rgb<f32>;
 pub struct GlTexture {
     handle: gl::types::GLuint,
     width: gl::types::GLint,
-    height: gl::types::GLint
+    height: gl::types::GLint,
 }
 
 impl GlTexture {
@@ -21,17 +21,29 @@ impl GlTexture {
 
             let data = match data {
                 Some(data) => data.as_ptr() as *const std::ffi::c_void,
-                None => std::ptr::null()
+                None => std::ptr::null(),
             };
 
-            gl::TexImage2D(gl::TEXTURE_2D, 
-                           0, gl::RGB as i32, width, height, 0, 
-                           gl::RGB, gl::FLOAT, data);
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGB as i32,
+                width,
+                height,
+                0,
+                gl::RGB,
+                gl::FLOAT,
+                data,
+            );
 
             gl::ClearTexImage(handle, 0, gl::RGB, gl::FLOAT, std::ptr::null());
         }
 
-        GlTexture { handle, width, height }
+        GlTexture {
+            handle,
+            width,
+            height,
+        }
     }
 
     pub fn bind(&self) {
@@ -50,8 +62,17 @@ impl GlTexture {
 
         let data = rgb.into_array();
         unsafe {
-            gl::TexSubImage2D(gl::TEXTURE_2D, 0, u, v, 1, 1, 
-                              gl::RGB, gl::FLOAT, data.as_ptr() as *const std::ffi::c_void);
+            gl::TexSubImage2D(
+                gl::TEXTURE_2D,
+                0,
+                u,
+                v,
+                1,
+                1,
+                gl::RGB,
+                gl::FLOAT,
+                data.as_ptr() as *const std::ffi::c_void,
+            );
         }
     }
 }

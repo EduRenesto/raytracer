@@ -1,18 +1,18 @@
-pub mod shape;
-pub mod render_context;
 pub mod camera;
-pub mod ray;
 pub mod material;
+pub mod ray;
+pub mod render_context;
+pub mod shape;
 
-use vek::vec::{Vec2, Vec3};
-use vek::rgb::Rgb;
 use rand::Rng;
+use vek::rgb::Rgb;
+use vek::vec::{Vec2, Vec3};
 
-use render_context::RenderContext;
 use camera::Camera;
-use ray::{Ray, RayHit};
-use shape::Shape;
 use material::Material;
+use ray::{Ray, RayHit};
+use render_context::RenderContext;
+use shape::Shape;
 
 use std::sync::Arc;
 
@@ -20,8 +20,10 @@ static MAX_DEPTH: u16 = 20;
 
 type Sender = std::sync::mpsc::Sender<(Vec2<usize>, Rgb<f32>)>;
 
-fn spawn_thread<'a, C>(sender: &Sender, ctx: Arc<RenderContext<C>>, idx: u16) where
-    C: Camera + Send + Sync + 'static {
+fn spawn_thread<'a, C>(sender: &Sender, ctx: Arc<RenderContext<C>>, idx: u16)
+where
+    C: Camera + Send + Sync + 'static,
+{
     let tx = sender.clone();
 
     let idx = idx as usize;
@@ -46,7 +48,7 @@ fn spawn_thread<'a, C>(sender: &Sender, ctx: Arc<RenderContext<C>>, idx: u16) wh
 
                 for _ in 0..ctx.samples {
                     let ray = ctx.camera.generate_ray(coord);
-                    println!("{:?}", ray);
+                    //println!("{:?}", ray);
                     acc += trace(ctx.clone(), &mut rng, ray, 0);
                 }
 
@@ -58,7 +60,12 @@ fn spawn_thread<'a, C>(sender: &Sender, ctx: Arc<RenderContext<C>>, idx: u16) wh
     });
 }
 
-fn trace<C: Camera>(ctx: Arc<RenderContext<C>>, rng: &mut rand::ThreadRng, ray: Ray, depth: u16) -> Rgb<f32> {
+fn trace<C: Camera>(
+    ctx: Arc<RenderContext<C>>,
+    rng: &mut rand::ThreadRng,
+    ray: Ray,
+    depth: u16,
+) -> Rgb<f32> {
     if depth > MAX_DEPTH {
         Rgb::zero()
     } else {
@@ -79,18 +86,25 @@ fn trace<C: Camera>(ctx: Arc<RenderContext<C>>, rng: &mut rand::ThreadRng, ray: 
         if let Some(hit) = nearest_hit {
             let normal = hit.object.normal_at(&hit);
 
+            if depth == 0 {
+                println!("Primary hit at {:?}. Origin: {:?}", 
+                         hit.ray.origin + hit.distance * hit.ray.direction,
+                         hit.ray.origin);
+            }
+
             match hit.object.material() {
                 Material::Lambertian(color) => {
-                    let new_origin = ray.origin + ray.direction * hit.distance; 
-                    let new_direction = (random_in_hemisphere(rng, new_origin, normal) - new_origin).normalized();
+                    let new_origin = ray.origin + ray.direction * hit.distance;
+                    let new_direction =
+                        (random_in_hemisphere(rng, new_origin, normal) - new_origin).normalized();
 
                     let cos_theta = new_direction.dot(normal);
 
-                    let p = 1f32/(2f32 * std::f32::consts::PI);
+                    let p = 1f32 / (2f32 * std::f32::consts::PI);
 
                     let new_ray = Ray {
                         origin: new_origin,
-                        direction: new_direction
+                        direction: new_direction,
                     };
 
                     let brdf = 0.5 / std::f32::consts::PI;
@@ -99,26 +113,29 @@ fn trace<C: Camera>(ctx: Arc<RenderContext<C>>, rng: &mut rand::ThreadRng, ray: 
 
                     color + brdf * incoming * cos_theta / p
                     //brdf * incoming * cos_theta / p
-                },
+                }
                 Material::Glossy => {
                     let reflected = ray.direction.reflected(-normal);
                     let new_origin = ray.origin + ray.direction * hit.distance;
                     let new_ray = Ray {
                         origin: new_origin,
-                        direction: reflected.normalized()
+                        direction: reflected.normalized(),
                     };
                     0.8f32 * trace(ctx, rng, new_ray, depth + 1)
                 }
             }
         } else {
-            let t = 0.5*(ray.direction.normalized().y + 1.0);
-            (1.0 - t)*Rgb::new(1.0, 1.0, 1.0) + t*Rgb::new(0.5, 0.7, 1.0)
+            let t = 0.5 * (ray.direction.normalized().y + 1.0);
+            (1.0 - t) * Rgb::new(1.0, 1.0, 1.0) + t * Rgb::new(0.5, 0.7, 1.0)
         }
-
     }
 }
 
-fn random_in_hemisphere(rng: &mut rand::ThreadRng, center: Vec3<f32>, normal: Vec3<f32>) -> Vec3<f32> {
+fn random_in_hemisphere(
+    rng: &mut rand::ThreadRng,
+    center: Vec3<f32>,
+    normal: Vec3<f32>,
+) -> Vec3<f32> {
     let theta = rng.gen_range(0f32, std::f32::consts::PI);
     let phi = rng.gen_range(0f32, 2f32 * std::f32::consts::PI);
 
@@ -129,8 +146,10 @@ fn random_in_hemisphere(rng: &mut rand::ThreadRng, center: Vec3<f32>, normal: Ve
     center + normal + Vec3::new(x, y, z)
 }
 
-pub fn render<'a, C>(sender: &Sender, ctx: RenderContext<C>) where
-    C: Camera + Send + Sync + 'static {
+pub fn render<'a, C>(sender: &Sender, ctx: RenderContext<C>)
+where
+    C: Camera + Send + Sync + 'static,
+{
     let ctx = Arc::new(ctx);
     for i in 0..ctx.n_threads {
         spawn_thread(sender, ctx.clone(), i);
