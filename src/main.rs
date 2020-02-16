@@ -31,13 +31,13 @@ fn main() {
     let (tx, rx) = std::sync::mpsc::channel();
 
     let camera = PerspCamera::new(
-        Vec3::new(0.0, 1.0, 0.0),
-        Vec3::new(-10.0, -10.0, 10.0),
-        std::f32::consts::FRAC_PI_4,
-        (w as f32) / (h as f32),
-        (0f32).to_radians(),
-        w as u32,
-        h as u32,
+        Vec3::new(0.0, 10.0, 0.0), // position of the camera
+        Vec3::new(0.0, 10.0, 1.0), // position of the target
+        std::f32::consts::FRAC_PI_4, // field of view in radians
+        (w as f32) / (h as f32), // aspect ratio (width/height)
+        (0f32).to_radians(), // camera roll
+        w as u32, // width
+        h as u32, // height
     );
 
     let ctx = RenderContext {
@@ -48,18 +48,18 @@ fn main() {
         objects: Arc::new(vec![
             Shape::Sphere(
                 Material::Lambertian(Rgb::new(0.0, 0.0, 0.6)),
-                Vec3::new(-2.0, 1.0, 1.0),
-                0.5,
+                Vec3::new(1.0, 10.0, 2.0),
+                0.8,
             ),
             Shape::Sphere(
                 Material::Lambertian(Rgb::new(0.0, 0.5, 0.0)),
-                Vec3::new(-2.5, 1.0, 3.5),
+                Vec3::new(-1.0, 10.0, 2.0),
                 0.5,
             ),
-            Shape::Plane(
-                Material::Lambertian(Rgb::new(0.3, 0.0, 0.0)),
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(0.0, 1.0, 0.0),
+            Shape::Sphere(
+                Material::Glossy,
+                Vec3::new(0.0, 10.0, 2.0),
+                0.3,
             ),
             //Shape::Plane(
             ////Material::Glossy,
@@ -67,11 +67,11 @@ fn main() {
             //Vec3::new(-1.0, 0.0, 0.0),
             //Vec3::new(1.0, 0.0, 0.0).normalized(),
             //),
-            //Shape::Plane(
-            //Material::Glossy,
-            //Vec3::new(1.0, 0.0, 0.0),
-            //Vec3::new(-1.0, 0.0, 0.0).normalized(),
-            //),
+            Shape::Plane(
+                Material::Lambertian(Rgb::new(0.5, 0.5, 0.5)),
+                Vec3::new(0.0, 8.0, 0.0),
+                Vec3::new(0.0, 1.0, 0.0).normalized(),
+            ),
         ]),
         camera,
     };

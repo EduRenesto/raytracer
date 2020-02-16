@@ -7,5 +7,5 @@ out vec2 fs_TexCoord;
 
 void main() {
     gl_Position = vec4(vs_Pos, 1.0);
-    fs_TexCoord = vs_TexCoord;
+    fs_TexCoord = vec2(1.0) - vs_TexCoord;
 }

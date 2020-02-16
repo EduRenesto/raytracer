@@ -86,13 +86,13 @@ fn trace<C: Camera>(
         if let Some(hit) = nearest_hit {
             let normal = hit.object.normal_at(&hit);
 
-            if depth == 0 {
-                println!(
-                    "Primary hit at {:?}. Origin: {:?}",
-                    hit.ray.origin + hit.distance * hit.ray.direction,
-                    hit.ray.origin
-                );
-            }
+            //if depth == 0 {
+                //println!(
+                    //"Primary hit at {:?}. Origin: {:?}",
+                    //hit.ray.origin + hit.distance * hit.ray.direction,
+                    //hit.ray.origin
+                //);
+            //}
 
             match hit.object.material() {
                 Material::Lambertian(color) => {
