@@ -7,6 +7,7 @@ pub mod shape;
 use rand::Rng;
 use vek::rgb::Rgb;
 use vek::vec::{Vec2, Vec3};
+use rayon::prelude::*;
 
 use camera::Camera;
 use material::Material;
@@ -152,8 +153,36 @@ pub fn render<'a, C>(sender: &Sender, ctx: RenderContext<C>)
 where
     C: Camera + Send + Sync + 'static,
 {
+    let pxls = 0..(ctx.width * ctx.height);
+
     let ctx = Arc::new(ctx);
-    for i in 0..ctx.n_threads {
-        spawn_thread(sender, ctx.clone(), i);
-    }
+    //for i in 0..ctx.n_threads {
+        //spawn_thread(sender, ctx.clone(), i);
+    //}
+    
+    let sender = sender.clone();
+    
+    std::thread::spawn(move || {
+        pxls
+            .into_par_iter()
+            .for_each_with(sender.clone(), |s, idx| { 
+                let u = idx / ctx.width;
+                let v = idx % ctx.width;
+
+                let coord = Vec2::new(u, v);
+
+                let mut acc = Rgb::<f32>::zero();
+                let mut rng = rand::thread_rng();
+
+                for _ in 0..ctx.samples {
+                    let ray = ctx.camera.generate_ray(coord);
+                    //println!("{:?}", ray);
+                    acc += trace(ctx.clone(), &mut rng, ray, 0);
+                }
+
+                let color = acc / ctx.samples as f32;
+
+                s.send((coord, color)).unwrap();
+        });
+    });
 }

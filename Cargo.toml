@@ -11,3 +11,4 @@ glutin = "0.22.0-alpha3"
 gl = "0.13.0"
 clap = { version = "2.33.0", features = ["yaml"] }
 rand = "0.3"
+rayon = "1.3.0"
