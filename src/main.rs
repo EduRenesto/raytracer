@@ -58,7 +58,7 @@ fn main() {
             ),
             Shape::Sphere(
                 Material::Glossy,
-                Vec3::new(0.0, 10.0, 2.0),
+                Vec3::new(0.0, 9.9, 2.0),
                 0.3,
             ),
             //Shape::Plane(
@@ -68,7 +68,8 @@ fn main() {
             //Vec3::new(1.0, 0.0, 0.0).normalized(),
             //),
             Shape::Plane(
-                Material::Lambertian(Rgb::new(0.5, 0.5, 0.5)),
+                //Material::Lambertian(Rgb::new(0.2, 0.0, 0.2)),
+                Material::Glossy,
                 Vec3::new(0.0, 8.0, 0.0),
                 Vec3::new(0.0, 1.0, 0.0).normalized(),
             ),

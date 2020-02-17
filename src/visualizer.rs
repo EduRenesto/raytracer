@@ -130,9 +130,13 @@ impl Visualizer {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        for (pos, rgb) in receiver.iter().take(200) {
+        //for (pos, rgb) in receiver.iter().take(200) {
+            //tex.set_pixel((pos.x, pos.y), rgb);
+        //}
+
+        receiver.try_iter().for_each(|(pos, rgb)| {
             tex.set_pixel((pos.x, pos.y), rgb);
-        }
+        });
 
         shader.bind();
         shader.uniform_texture("_Tex".to_string(), tex, 0);
