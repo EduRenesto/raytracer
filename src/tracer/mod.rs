@@ -149,7 +149,7 @@ fn random_in_hemisphere(
     center + normal + Vec3::new(x, y, z)
 }
 
-pub fn render<'a, C>(sender: &Sender, ctx: RenderContext<C>)
+pub fn render<'a, C>(sender: Sender, ctx: RenderContext<C>)
 where
     C: Camera + Send + Sync + 'static,
 {
@@ -159,8 +159,6 @@ where
     //for i in 0..ctx.n_threads {
         //spawn_thread(sender, ctx.clone(), i);
     //}
-    
-    let sender = sender.clone();
     
     std::thread::spawn(move || {
         pxls
@@ -183,6 +181,6 @@ where
                 let color = acc / ctx.samples as f32;
 
                 s.send((coord, color)).unwrap();
-        });
+            });
     });
 }

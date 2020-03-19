@@ -14,6 +14,7 @@ use tracer::camera::PerspCamera;
 use tracer::material::Material;
 use tracer::render_context::RenderContext;
 use tracer::shape::Shape;
+use tracer::shape::Triangle;
 
 fn main() {
     let yaml = clap::load_yaml!("cli.yml");
@@ -31,7 +32,7 @@ fn main() {
     let (tx, rx) = std::sync::mpsc::channel();
 
     let camera = PerspCamera::new(
-        Vec3::new(0.0, 10.0, 0.0), // position of the camera
+        Vec3::new(0.0, 10.0, -5.0), // position of the camera
         Vec3::new(0.0, 10.0, 1.0), // position of the target
         std::f32::consts::FRAC_PI_4, // field of view in radians
         (w as f32) / (h as f32), // aspect ratio (width/height)
@@ -58,7 +59,7 @@ fn main() {
             ),
             Shape::Sphere(
                 Material::Glossy,
-                Vec3::new(0.0, 9.9, 2.0),
+                Vec3::new(0.0, 11.0, 2.0),
                 0.3,
             ),
             //Shape::Plane(
@@ -67,17 +68,27 @@ fn main() {
             //Vec3::new(-1.0, 0.0, 0.0),
             //Vec3::new(1.0, 0.0, 0.0).normalized(),
             //),
-            Shape::Plane(
-                //Material::Lambertian(Rgb::new(0.2, 0.0, 0.2)),
-                Material::Glossy,
-                Vec3::new(0.0, 8.0, 0.0),
-                Vec3::new(0.0, 1.0, 0.0).normalized(),
-            ),
+            //Shape::Plane(
+            //    //Material::Lambertian(Rgb::new(0.2, 0.0, 0.2)),
+            //    Material::Glossy,
+            //    Vec3::new(0.0, 8.0, 0.0),
+            //    Vec3::new(0.0, 1.0, 0.0).normalized(),
+            //),
+            Shape::Poly(
+                Material::Lambertian(Rgb::new(0.0, 0.0, 0.0)),
+                Triangle {
+                    vertices: [Vec3::new(-10.0, 8.0, -10.0),
+                               Vec3::new(10.0, 8.0, -10.0),
+                               Vec3::new(-10.0, 8.0, 10.0)],
+                    normals: None,
+                    tex_coords: None,
+                }
+            )
         ]),
         camera,
     };
 
-    tracer::render(&tx, ctx);
+    tracer::render(tx, ctx);
 
     let _ = visualizer::Visualizer::new(rx, w, h);
 }
