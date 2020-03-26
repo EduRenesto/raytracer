@@ -3,6 +3,7 @@ pub mod material;
 pub mod ray;
 pub mod render_context;
 pub mod shape;
+pub mod light;
 
 use rand::Rng;
 use vek::rgb::Rgb;
@@ -54,11 +55,35 @@ where
                 }
 
                 let color = acc / ctx.samples as f32;
+                
+                //let ray = ctx.camera.generate_ray(coord);
+                //let color = trace(ctx.clone(), &mut rng, ray, 0);
 
                 tx.send((coord, color)).unwrap();
             }
         }
     });
+}
+
+fn check_hit<'a, C: Camera>(
+    ctx: Arc<RenderContext<C>>,
+    ray: &'a Ray
+) -> Option<RayHit<'a>> {
+    let mut nearest_hit: Option<RayHit<'a>> = None;
+
+    for obj in ctx.objects.iter() {
+        if let Some(hit) = obj.intersects(&ray) {
+            if let Some(nearest) = nearest_hit {
+                if hit.distance < nearest.distance {
+                    nearest_hit = Some(hit);
+                }
+            } else {
+                nearest_hit = Some(hit);
+            }
+        }
+    }
+
+    nearest_hit
 }
 
 fn trace<C: Camera>(
@@ -70,19 +95,7 @@ fn trace<C: Camera>(
     if depth > MAX_DEPTH {
         Rgb::zero()
     } else {
-        let mut nearest_hit: Option<RayHit> = None;
-
-        for obj in ctx.objects.iter() {
-            if let Some(hit) = obj.intersects(&ray) {
-                if let Some(nearest) = nearest_hit {
-                    if hit.distance < nearest.distance {
-                        nearest_hit = Some(hit);
-                    }
-                } else {
-                    nearest_hit = Some(hit);
-                }
-            }
-        }
+        let nearest_hit = check_hit(ctx.clone(), &ray);
 
         if let Some(hit) = nearest_hit {
             let normal = hit.object.normal_at(&hit);
@@ -96,7 +109,7 @@ fn trace<C: Camera>(
             //}
 
             match hit.object.material() {
-                Material::Lambertian(color) => {
+                Material::Lambertian(color, roughness) => {
                     let new_origin = ray.origin + ray.direction * hit.distance;
                     let new_direction =
                         (random_in_hemisphere(rng, new_origin, normal) - new_origin).normalized();
@@ -110,12 +123,35 @@ fn trace<C: Camera>(
                         direction: new_direction,
                     };
 
-                    let brdf = 0.5 / std::f32::consts::PI;
+                    let brdf = roughness / std::f32::consts::PI;
 
-                    let incoming = trace(ctx.clone(), rng, new_ray, depth + 1);
+                    let indirect = trace(ctx.clone(), rng, new_ray, depth + 1);
 
-                    color + brdf * incoming * cos_theta / p
+                    //diffuse*color + brdf * incoming * cos_theta / p
                     //brdf * incoming * cos_theta / p
+                
+                    let diffuse = ctx.lights.iter()
+                        .filter_map(|l| {
+                            let dist = (l.position - new_origin);
+
+                            let shadow_ray = Ray {
+                                origin: new_origin,
+                                direction: dist.normalized()
+                            };
+
+                            match check_hit(ctx.clone(), &shadow_ray) {
+                                Some(hit) if hit.distance > dist.magnitude() => {
+                                    Some(normal.dot(dist.normalized()).max(0.0))
+                                },
+                                None => {
+                                    Some(normal.dot(dist.normalized()).max(0.0))
+                                },
+                                _ => None
+                            }
+                        })
+                        .sum::<f32>();
+
+                    ctx.ambient + color * (diffuse + brdf * indirect * cos_theta / p)
                 }
                 Material::Glossy => {
                     let reflected = ray.direction.reflected(-normal);

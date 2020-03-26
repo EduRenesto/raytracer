@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use vek::vec::{Vec2, Vec3};
 
 use super::shape::Shape;
@@ -8,9 +10,9 @@ pub struct Ray {
     pub direction: Vec3<f32>,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct RayHit<'a> {
     pub ray: &'a Ray,
     pub distance: f32,
-    pub object: Shape,
+    pub object: Arc<dyn Shape>,
 }

@@ -9,11 +9,17 @@ use super::ray::{Ray, RayHit};
 //fn material(&self) -> Material;
 //}
 
-#[derive(Copy, Clone)]
-pub enum Shape {
-    Sphere(Material, Vec3<f32>, f32),
-    Plane(Material, Vec3<f32>, Vec3<f32>),
-    Poly(Material, Triangle),
+//#[derive(Copy, Clone)]
+//pub enum Shape {
+    //Sphere(Material, Vec3<f32>, f32),
+    //Plane(Material, Vec3<f32>, Vec3<f32>),
+    //Poly(Material, Triangle),
+//}
+
+pub trait Shape {
+    fn intersects<'a>(&self, ray: &'a Ray) -> Option<RayHit<'a>>;
+    fn normal_at<'a>(&self, point: Vec3<f32>) -> Vec3<f32>;
+    fn material(&self) -> Material;
 }
 
 #[derive(Debug)]
@@ -70,7 +76,7 @@ impl Shape {
             &Shape::Plane(_, point, normal) => {
                 let nr = normal.dot(ray.direction);
                 let u = ray.origin - point;
-                let t = ((u.dot(normal)) / nr);
+                let t = -((u.dot(normal)) / nr);
 
                 if nr == 0f32 || t <= 0f32 {
                     None
@@ -83,42 +89,33 @@ impl Shape {
                 }
             }
             &Shape::Poly(_, triangle) => {
-                // TODO otimizar essa caralaha.
-                // Reasoning:
-                //
-                // Primeiro checamos a interseccao raio-plano.
+                let edge1 = triangle.vertices[1] - triangle.vertices[0];
+                let edge2 = triangle.vertices[2] - triangle.vertices[0];
+                let h = ray.direction.cross(edge2);
+                let a = edge1.dot(h);
 
-                let v01 = triangle.vertices[1] - triangle.vertices[0];
-                let v02 = triangle.vertices[2] - triangle.vertices[0];
-                let v12 = triangle.vertices[2] - triangle.vertices[1];
-
-                let normal = v01.cross(v02).normalized();
-
-                let nr = normal.dot(ray.direction);
-                let u = ray.origin - triangle.vertices[0];
-                let t = ((u.dot(normal)) / nr);
-
-                let point = ray.origin + t * ray.direction;
-
-                if nr == 0f32 || t <= 0f32 {
+                if a.abs() < 0.0001 {
                     return None;
                 }
 
-                // Então checamos se a projeção entre o vetor que leva dos vértices
-                // ao ponto e as arestas é menor que 1.
-                // Se sim, então está dentro do triangulo
-                // Senão, está fora.
+                let f = 1.0/a;
+                let s = ray.origin - triangle.vertices[0];
+                let u = f * s.dot(h);
 
-                let v0p = point - triangle.vertices[0];
-                let v1p = point - triangle.vertices[1];
-                let v2p = point - triangle.vertices[2];
+                if u < 0.0 || u > 1.0 {
+                    return None;
+                }
 
-                let w0 = v0p.dot(v01).abs() <= 1f32 && v0p.dot(v02).abs() <= 1f32;
-                let w1 = v1p.dot(v01).abs() <= 1f32 && v1p.dot(v12).abs() <= 1f32;
-                let w2 = v2p.dot(v02).abs() <= 1f32 && v2p.dot(v12).abs() <= 1f32;
+                let q = s.cross(edge1);
+                let v = f * ray.direction.dot(q);
 
-                if w0 && w1 && w2 {
-                    println!("Trig hit");
+                if v < 0.0 || u + v > 1.0 {
+                    return None;
+                }
+
+                let t = f * edge2.dot(q);
+
+                if t > 0.0001 {
                     Some(RayHit {
                         ray: &ray,
                         distance: t,
@@ -141,7 +138,7 @@ impl Shape {
                 let v0 = trig.vertices[1] - trig.vertices[0];
                 let v1 = trig.vertices[2] - trig.vertices[0];
 
-                v0.cross(v1).normalized()
+                -v0.cross(v1).normalized()
             }
         }
     }

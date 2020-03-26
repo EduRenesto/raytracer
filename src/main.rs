@@ -10,11 +10,12 @@ mod gl_texture;
 mod tracer;
 mod visualizer;
 
-use tracer::camera::PerspCamera;
+use tracer::camera::MtxCamera;
 use tracer::material::Material;
 use tracer::render_context::RenderContext;
 use tracer::shape::Shape;
 use tracer::shape::Triangle;
+use tracer::light::Light;
 
 fn main() {
     let yaml = clap::load_yaml!("cli.yml");
@@ -31,15 +32,30 @@ fn main() {
 
     let (tx, rx) = std::sync::mpsc::channel();
 
-    let camera = PerspCamera::new(
-        Vec3::new(0.0, 10.0, -5.0), // position of the camera
-        Vec3::new(0.0, 10.0, 1.0), // position of the target
-        std::f32::consts::FRAC_PI_4, // field of view in radians
-        (w as f32) / (h as f32), // aspect ratio (width/height)
-        (0f32).to_radians(), // camera roll
-        w as u32, // width
-        h as u32, // height
+    //let camera = PerspCamera::new(
+        //Vec3::new(0.0, 10.0, -5.0), // position of the camera
+        //Vec3::new(0.0, 10.0, 1.0), // position of the target
+        //std::f32::consts::FRAC_PI_4, // field of view in radians
+        //(w as f32) / (h as f32), // aspect ratio (width/height)
+        //(0f32).to_radians(), // camera roll
+        //w as u32, // width
+        //h as u32, // height
+    //);
+
+    let camera = MtxCamera::new(
+        Vec3::new(10.0, 10.0, 10.0),
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        std::f32::consts::FRAC_PI_3,
+        w,
+        h
     );
+
+    let triangle = Triangle {
+        vertices: [Vec3::new(-4.0, 0.0, 0.0), Vec3::new(4.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 4.0)],
+        normals: None,
+        tex_coords: None,
+    };
 
     let ctx = RenderContext {
         width: w,
@@ -48,43 +64,28 @@ fn main() {
         n_threads: n_threads,
         objects: Arc::new(vec![
             Shape::Sphere(
-                Material::Lambertian(Rgb::new(0.0, 0.0, 0.6)),
-                Vec3::new(1.0, 10.0, 2.0),
-                0.8,
-            ),
-            Shape::Sphere(
-                Material::Lambertian(Rgb::new(0.0, 0.5, 0.0)),
-                Vec3::new(-1.0, 10.0, 2.0),
-                0.5,
-            ),
-            Shape::Sphere(
                 Material::Glossy,
-                Vec3::new(0.0, 11.0, 2.0),
-                0.3,
+                Vec3::new(0.0, 3.0, 0.0),
+                3.0
             ),
-            //Shape::Plane(
-            ////Material::Glossy,
-            //Material::Lambertian(Rgb::new(0.6, 0.0, 0.0)),
-            //Vec3::new(-1.0, 0.0, 0.0),
-            //Vec3::new(1.0, 0.0, 0.0).normalized(),
-            //),
-            //Shape::Plane(
-            //    //Material::Lambertian(Rgb::new(0.2, 0.0, 0.2)),
-            //    Material::Glossy,
-            //    Vec3::new(0.0, 8.0, 0.0),
-            //    Vec3::new(0.0, 1.0, 0.0).normalized(),
-            //),
-            Shape::Poly(
-                Material::Lambertian(Rgb::new(0.0, 0.0, 0.0)),
-                Triangle {
-                    vertices: [Vec3::new(-10.0, 8.0, -10.0),
-                               Vec3::new(10.0, 8.0, -10.0),
-                               Vec3::new(-10.0, 8.0, 10.0)],
-                    normals: None,
-                    tex_coords: None,
-                }
-            )
+            Shape::Sphere(
+                Material::Lambertian(Rgb::new(0.8, 0.0, 0.8), 0.2),
+                Vec3::new(3.0, 1.0, 0.0),
+                1.0
+            ),
+            Shape::Plane(
+                Material::Lambertian(Rgb::new(1.0, 1.0, 1.0), 0.6),
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(0.0, 1.0, 0.0)
+            ),
         ]),
+        lights: Arc::new(vec![
+            Light {
+                intensity: 10.0,
+                position: Vec3::new(0.0, 5.0, 5.0),
+            }
+        ]),
+        ambient: Rgb::new(0.1, 0.1, 0.1),
         camera,
     };
 
