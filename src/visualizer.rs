@@ -131,7 +131,7 @@ impl Visualizer {
         }
 
         //for (pos, rgb) in receiver.iter().take(200) {
-            //tex.set_pixel((pos.x, pos.y), rgb);
+        //tex.set_pixel((pos.x, pos.y), rgb);
         //}
 
         receiver.try_iter().for_each(|(pos, rgb)| {

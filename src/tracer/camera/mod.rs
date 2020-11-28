@@ -1,6 +1,6 @@
 use super::Ray;
+use vek::mat::Mat4;
 use vek::vec::{Vec2, Vec3, Vec4};
-use vek::mat::{Mat4};
 
 pub trait Camera {
     fn generate_ray(&self, screen_coord: Vec2<usize>) -> Ray;
@@ -21,7 +21,7 @@ impl MtxCamera {
         up: Vec3<f32>,
         fovy: f32,
         width: usize,
-        height: usize
+        height: usize,
     ) -> MtxCamera {
         let aspect = (width as f32) / (height as f32);
         let view = Mat4::look_at_rh(origin, target, up);
@@ -38,7 +38,10 @@ impl MtxCamera {
         println!("Top Left: {:?}", cam.generate_ray(Vec2::new(0, 0)));
         println!("Top Right: {:?}", cam.generate_ray(Vec2::new(width, 0)));
         println!("Bot Left: {:?}", cam.generate_ray(Vec2::new(0, height)));
-        println!("Bot Right: {:?}", cam.generate_ray(Vec2::new(width, height)));
+        println!(
+            "Bot Right: {:?}",
+            cam.generate_ray(Vec2::new(width, height))
+        );
 
         cam
     }
@@ -52,7 +55,7 @@ impl Camera for MtxCamera {
         let v = (coord.y as f32 / self.height as f32) * 2.0 - 1.0;
 
         let target_eye = Vec4::new(u, v, 1.0, 1.0);
-        
+
         let origin = self.vp_inverse * origin_eye;
         let origin = origin.map(|e| e / origin.w);
         let target = self.vp_inverse * target_eye;
@@ -62,7 +65,7 @@ impl Camera for MtxCamera {
 
         Ray {
             origin: origin.into(),
-            direction: direction.into()
+            direction: direction.into(),
         }
     }
 }
@@ -103,7 +106,10 @@ impl PerspCamera {
         let horizontal = u * (2.0 * half_width);
         let vertical = v * (2.0 * half_height);
 
-        println!("corner: {:?},\n horizontal: {:?},\n vertical: {:?}", corner, horizontal, vertical);
+        println!(
+            "corner: {:?},\n horizontal: {:?},\n vertical: {:?}",
+            corner, horizontal, vertical
+        );
 
         let cam = PerspCamera {
             origin,
@@ -115,9 +121,18 @@ impl PerspCamera {
         };
 
         println!("Top Left: {:?}", cam.generate_ray(Vec2::new(0, 0)));
-        println!("Top Right: {:?}", cam.generate_ray(Vec2::new(width as usize, 0)));
-        println!("Bot Left: {:?}", cam.generate_ray(Vec2::new(0, height as usize)));
-        println!("Bot Right: {:?}", cam.generate_ray(Vec2::new(width as usize, height as usize)));
+        println!(
+            "Top Right: {:?}",
+            cam.generate_ray(Vec2::new(width as usize, 0))
+        );
+        println!(
+            "Bot Left: {:?}",
+            cam.generate_ray(Vec2::new(0, height as usize))
+        );
+        println!(
+            "Bot Right: {:?}",
+            cam.generate_ray(Vec2::new(width as usize, height as usize))
+        );
 
         cam
     }
@@ -130,11 +145,11 @@ impl Camera for PerspCamera {
             screen_coord.y as f32 / self.height as f32,
         );
         //let direction =
-            //self.corner + (self.horizontal * screen_coord.x) + (self.vertical * screen_coord.y)
-                //- self.origin;
+        //self.corner + (self.horizontal * screen_coord.x) + (self.vertical * screen_coord.y)
+        //- self.origin;
 
-        let direction =
-            self.corner + (self.horizontal * screen_coord.x) - (self.vertical * screen_coord.y)
+        let direction = self.corner + (self.horizontal * screen_coord.x)
+            - (self.vertical * screen_coord.y)
             - self.vertical.cross(self.horizontal).normalized();
 
         Ray {
